@@ -255,14 +255,14 @@ st.divider()
 st.subheader("Google Sheets", anchor=False)
 status_prikk(True)
 
-FORVENTET_SHEET_ID = "18fvqNKEh7dFfA9S63uxkBOpigR8vzD31wrAq49yqOIQ"
+FORVENTET_SHEET_ID = "1yTzqU4Z9Bu0FT_i4-t1ifwRrFklTucma9ibLBEBLCnY"
 
 if sh.id == FORVENTET_SHEET_ID:
     st.success(f"Tilkoblet regneark: **{sh.title}** (ID `{sh.id}`) – stemmer med forventet ark.", icon=":material/check_circle:")
 else:
     st.error(
         f"Tilkoblet regneark: **{sh.title}** (ID `{sh.id}`) – **stemmer IKKE** med arket du har bekreftet "
-        f"(«Netthandelsprisene_Fase 1», ID `{FORVENTET_SHEET_ID}`). Alt appen leser og skriver går til "
+        f"(«Bringprisen», ID `{FORVENTET_SHEET_ID}`). Alt appen leser og skriver går til "
         "ARKET OVER, ikke til det du har åpent i nettleseren. Rett opp `sheet_id` under "
         "`[google_sheets]` i appens Secrets på Streamlit Cloud (Manage app → Settings → Secrets), "
         "og sørg for at tjenestekontoen (e-posten i `gcp_service_account`) har redigeringstilgang til "
