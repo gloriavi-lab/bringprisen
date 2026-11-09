@@ -25,7 +25,7 @@ JURY_FANE = "Jury"
 VEILEDNING_FANE = "Veiledning"
 FASER_FANE = "Faser"
 
-KRITERIER_HEADER = ["Fagfelt", "Kriterium", "Kort beskrivelse", "Utfyllende forklaring", "Skala 1", "Skala 3", "Skala 5", "Eksempler", "Fase", "Aktiv", "Steg", "Stegnummer"]
+KRITERIER_HEADER = ["Fagfelt", "Kriterium", "Kort beskrivelse", "Utfyllende forklaring", "Skala 1", "Skala 3", "Skala 5", "Eksempler", "Fase", "Aktiv", "Steg", "Stegnummer", "Del"]
 JURY_GRUNNKOLONNER = ["Navn", "E-post", "Farge"]
 VEILEDNING_HEADER = ["Overskrift", "Tekst"]
 FASER_HEADER = ["Fase", "Navn", "Beskrivelse", "Status", "Startdato", "Sluttdato"]
@@ -226,6 +226,7 @@ def read_criteria(_sh):
             "aktiv": str(r.get("Aktiv", "")).strip().lower() == "ja",
             "steg": str(r.get("Steg", "")).strip(),
             "stegnummer": str(r.get("Stegnummer", "")).strip(),
+            "del": str(r.get("Del", "")).strip(),
         })
         siste = resultat[-1]
         siste["navn"] = _navn_uten_nummer(siste["kriterium"])

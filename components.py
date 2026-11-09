@@ -16,7 +16,10 @@ from theme import FAGFELT_FARGE
 _KRITERIE_SEKSJON_CSS = """
 .bk-tittel { font-size: 22px; font-weight: 700; line-height: 1.3; }
 .bk-ingress { margin: 2px 0 14px 0; font-size: 15px; }
-.bk-piller { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.bk-delgruppe { margin-bottom: 12px; }
+.bk-delnavn { margin-bottom: 6px; font-size: 13px; font-weight: 700; }
+.bk-pilleliste { display: flex; flex-wrap: wrap; gap: 8px; }
+.bk-innhold { margin-top: 16px; }
 .bk-pille {
   padding: 8px 16px; border-radius: 999px; background: #E3EFD5;
   color: #12301F !important; font-size: 14px; font-weight: 600;
@@ -44,7 +47,7 @@ _KRITERIE_SEKSJON_CSS = """
 .bk-navn { color: #12301F; font-size: 16px; font-weight: 700; line-height: 1.3; }
 .bk-beskrivelse { margin-top: 3px; color: #2B4436; font-size: 14px; line-height: 1.45; }
 @media (max-width: 640px) {
-  .bk-piller { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .bk-pilleliste { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
   .bk-gruppe { grid-template-columns: minmax(0, 1fr); }
   .bk-gruppenavn { padding: 14px 16px; }
 }
@@ -54,12 +57,13 @@ _KRITERIE_SEKSJON_CSS = """
 def kriterie_seksjon_html(per_steg, kriterium_info, mine=frozenset()):
     """Bygger kriterieseksjonen på Oversikt som én st.html-blokk, med én fane
     per steg. st.html kjører ikke JS, så fanene er radioknapper styrt av CSS."""
-    valg, piller, grupper, valgt_regler = [], [], [], []
+    valg, piller_per_del, grupper, valgt_regler = [], {}, [], []
     for i, (steg, kriterier) in enumerate(per_steg.items(), start=1):
         valg_id, gruppe_id = f"bk-valg-{i}", f"bk-gruppe-{i}"
         nummer = kriterium_info.get(kriterier[0], {}).get("stegnummer", "").split(".")[0] or str(i)
         valg.append(f'<input class="bk-valg" type="radio" name="bk-steg" id="{valg_id}"{" checked" if i == 1 else ""}>')
-        piller.append(f'<label class="bk-pille" for="{valg_id}">{escape(nummer)} {escape(steg)}</label>')
+        del_navn = kriterium_info.get(kriterier[0], {}).get("del", "")
+        piller_per_del.setdefault(del_navn, []).append(f'<label class="bk-pille" for="{valg_id}">{escape(nummer)} {escape(steg)}</label>')
         valgt_regler.append(
             f"#{valg_id}:checked ~ .bk-innhold #{gruppe_id} {{ display: grid; }}\n"
             f'#{valg_id}:checked ~ .bk-piller label[for="{valg_id}"] {{ background: #12301F; color: #FFFFFF !important; }}\n'
@@ -81,11 +85,16 @@ def kriterie_seksjon_html(per_steg, kriterium_info, mine=frozenset()):
         )
 
     uthevet = " Dine tildelte kriterier er uthevet." if mine else ""
+    piller = "".join(
+        f'<div class="bk-delgruppe">{f"""<div class="bk-delnavn">{escape(del_navn)}</div>""" if del_navn else ""}'
+        f'<div class="bk-pilleliste">{"".join(liste)}</div></div>'
+        for del_navn, liste in piller_per_del.items()
+    )
     return (
         f"<style>{_KRITERIE_SEKSJON_CSS}{''.join(valgt_regler)}</style>"
-        f'<div class="bk-seksjon"><div class="bk-tittel">Del 1 – Nettbutikken (alle nettbutikker)</div>'
+        f'<div class="bk-seksjon"><div class="bk-tittel">Bring-prisen – kriterier</div>'
         f'<div class="bk-ingress">Hvert kriterium får en score fra 1 til 5.{uthevet}</div>'
-        f'{"".join(valg)}<div class="bk-piller">{"".join(piller)}</div>'
+        f'{"".join(valg)}<div class="bk-piller">{piller}</div>'
         f'<div class="bk-innhold">{"".join(grupper)}</div></div>'
     )
 

@@ -91,7 +91,9 @@ jurynavn = st.session_state.get("_jurynavn")
 mine = mine_kriterier(jury, jurynavn) if jurynavn else set()
 
 if STEG:
-    st.html(kriterie_seksjon_html(KRITERIER_PER_STEG, kriterium_info, mine))
+    # Viser hele Word-dokumentet: også Del 2 og Samlet vurdering, som ikke scores her.
+    alle_aktive = aktive_kriterier(alle_kriterier)
+    st.html(kriterie_seksjon_html(kriterier_per_steg(alle_aktive), {k["kriterium"]: k for k in alle_aktive}, mine))
 else:
     st.caption("Ingen kriterier funnet – sjekk fanen «Kriterier» i regnearket.")
 
