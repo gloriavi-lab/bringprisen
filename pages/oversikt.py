@@ -10,7 +10,7 @@ from components import kriterie_seksjon_html, rutenett
 from data import er_tall
 from jury import aktive_kriterier, aktiv_fase, kriterier_per_steg, mine_kriterier, read_criteria, read_faser, read_jury, read_veiledning
 from sheets import read_fase1_scores, read_ratings, read_stores
-from theme import FAGFELT_FARGE, KLASSE_IKON, KLASSE_TONE
+from theme import KLASSE_IKON, KLASSE_TONE, STEG_FARGE
 
 
 sh = st.session_state.get("_sh")
@@ -107,12 +107,11 @@ else:
     from jury import beskriv_tildeling
 
     # Kompakt kort-variant (vises alltid øverst, og alene på mobil)
-    FARGEPALETT = ["#4472C4", "#70AD47", "#ED7D31", "#7030A0", "#5B9BD5", "#C8102E"]
     kort = []
-    for i, navn in enumerate(sorted(jury.keys())):
+    for navn in sorted(jury.keys()):
         beskrivelse = beskriv_tildeling(navn, jury, KRITERIER_PER_STEG)
         merkelapper = "".join(
-            f'<span class="klasse-badge" style="margin:2px 4px 2px 0;border-color:{FARGEPALETT[i % len(FARGEPALETT)]};">{d.strip()}</span>'
+            f'<span class="klasse-badge" style="margin:2px 4px 2px 0;border-color:{STEG_FARGE.get(d.split(" – ")[0].strip(), "#888")};background:color-mix(in srgb, {STEG_FARGE.get(d.split(" – ")[0].strip(), "#888")} 20%, transparent);">{d.strip()}</span>'
             for d in beskrivelse.split("·")
         ) if beskrivelse else '<span style="color:var(--tekst-dempet);font-size:13px;">Ingen kriterier tildelt</span>'
         kort.append(f'<h4>{navn}</h4><div>{merkelapper}</div>')
@@ -125,7 +124,7 @@ else:
         thead = "<tr><th style='text-align:left;padding:6px 10px;'>Jurymedlem</th>"
         for kat in STEG:
             for k in KRITERIER_PER_STEG[kat]:
-                thead += f'<th style="background:{FAGFELT_FARGE.get(kat, "#888")};color:white;font-size:11px;padding:6px 4px;writing-mode:vertical-rl;text-orientation:mixed;max-width:26px;">{kriterium_info[k]["visningsnavn"][:28]}</th>'
+                thead += f'<th style="background:{STEG_FARGE.get(kat, "#888")};color:white;font-size:11px;padding:6px 4px;writing-mode:vertical-rl;text-orientation:mixed;max-width:26px;">{kriterium_info[k]["visningsnavn"][:28]}</th>'
         thead += "</tr>"
 
         rader_html = ""
@@ -137,7 +136,7 @@ else:
                     tildelt = k in mine_kriterier(jury, navn)
                     if tildelt:
                         dekning[k] += 1
-                    rad += f"<td style='text-align:center;background:color-mix(in srgb, {FAGFELT_FARGE.get(kat, '#888')} 8%, transparent);'>{'✅' if tildelt else ''}</td>"
+                    rad += f"<td style='text-align:center;background:color-mix(in srgb, {STEG_FARGE.get(kat, '#888')} 22%, transparent);'>{'✅' if tildelt else ''}</td>"
             rad += "</tr>"
             rader_html += rad
 

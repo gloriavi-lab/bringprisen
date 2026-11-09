@@ -27,6 +27,12 @@ FAGFELT_FARGE = {
     "Markedsføring/kundedialog": "var(--fagfelt-markedsforing)",
     "Innovasjon": "var(--fagfelt-innovasjon)",
 }
+# Ekspertområdene i Bringprisen (Del 1) – brukt i juryoversikten på Oversikt
+STEG_FARGE = {
+    "Leveringsvalg og relevans": "#1F6FB2",
+    "Integrasjon og checkout-opplevelse": "#2E7D4F",
+    "Informasjon og forutsigbarhet før kjøp": "#7B3FA0",
+}
 GRUNNKOLONNE_FARGE = "#203864"  # Butikk/Jurymedlem/Klasse/Bransje/URL/Snitt totalt (foreløpig ubrukt i appen)
 
 # Størrelsesklasser – samme toner brukt på Oversikt og Butikker-siden
