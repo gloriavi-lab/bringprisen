@@ -20,11 +20,11 @@ _KRITERIE_SEKSJON_CSS = """
 .bk-pille {
   padding: 8px 16px; border-radius: 999px; background: #E3EFD5;
   color: #12301F !important; font-size: 14px; font-weight: 600;
-  text-decoration: none !important; white-space: nowrap;
+  cursor: pointer; white-space: nowrap;
 }
+.bk-valg { position: absolute; opacity: 0; pointer-events: none; }
 .bk-gruppe {
-  display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 8px;
-  margin-bottom: 16px; scroll-margin-top: 80px;
+  display: none; grid-template-columns: 240px minmax(0, 1fr); gap: 8px;
 }
 .bk-gruppenavn {
   display: flex; align-items: center; padding: 20px; border-radius: 16px;
@@ -52,14 +52,19 @@ _KRITERIE_SEKSJON_CSS = """
 
 
 def kriterie_seksjon_html(per_steg, kriterium_info, mine=frozenset()):
-    """Bygger hele kriterieseksjonen på Oversikt som én st.html-blokk. Valgt
-    pille styres kun med CSS (:target + :has) siden st.html ikke kjører JS."""
-    piller, grupper, valgt_regler = [], [], []
+    """Bygger kriterieseksjonen på Oversikt som én st.html-blokk, med én fane
+    per steg. st.html kjører ikke JS, så fanene er radioknapper styrt av CSS."""
+    valg, piller, grupper, valgt_regler = [], [], [], []
     for i, (steg, kriterier) in enumerate(per_steg.items(), start=1):
-        anker = f"bk-gruppe-{i}"
+        valg_id, gruppe_id = f"bk-valg-{i}", f"bk-gruppe-{i}"
         nummer = kriterium_info.get(kriterier[0], {}).get("stegnummer", "").split(".")[0] or str(i)
-        piller.append(f'<a class="bk-pille" href="#{anker}">{escape(nummer)} {escape(steg)}</a>')
-        valgt_regler.append(f'.bk-seksjon:has(#{anker}:target) a[href="#{anker}"]')
+        valg.append(f'<input class="bk-valg" type="radio" name="bk-steg" id="{valg_id}"{" checked" if i == 1 else ""}>')
+        piller.append(f'<label class="bk-pille" for="{valg_id}">{escape(nummer)} {escape(steg)}</label>')
+        valgt_regler.append(
+            f"#{valg_id}:checked ~ .bk-innhold #{gruppe_id} {{ display: grid; }}\n"
+            f'#{valg_id}:checked ~ .bk-piller label[for="{valg_id}"] {{ background: #12301F; color: #FFFFFF !important; }}\n'
+            f'#{valg_id}:focus-visible ~ .bk-piller label[for="{valg_id}"] {{ outline: 2px solid #86C35A; outline-offset: 2px; }}\n'
+        )
 
         rader = []
         for kriterium in kriterier:
@@ -71,18 +76,17 @@ def kriterie_seksjon_html(per_steg, kriterium_info, mine=frozenset()):
                 f'<div class="bk-beskrivelse">{escape(info.get("kort", ""))}</div></div></div>'
             )
         grupper.append(
-            f'<div class="bk-gruppe" id="{anker}"><div class="bk-gruppenavn">{escape(steg)}</div>'
+            f'<div class="bk-gruppe" id="{gruppe_id}"><div class="bk-gruppenavn">{escape(steg)}</div>'
             f'<div class="bk-rader">{"".join(rader)}</div></div>'
         )
 
-    valgt_regler.append(".bk-seksjon:not(:has(.bk-gruppe:target)) .bk-pille:first-child")
-    valgt_css = ",\n".join(valgt_regler) + " { background: #12301F; color: #FFFFFF !important; }"
     uthevet = " Dine tildelte kriterier er uthevet." if mine else ""
     return (
-        f"<style>{_KRITERIE_SEKSJON_CSS}{valgt_css}</style>"
+        f"<style>{_KRITERIE_SEKSJON_CSS}{''.join(valgt_regler)}</style>"
         f'<div class="bk-seksjon"><div class="bk-tittel">Del 1 – Nettbutikken (alle nettbutikker)</div>'
         f'<div class="bk-ingress">Hvert kriterium får en score fra 1 til 5.{uthevet}</div>'
-        f'<div class="bk-piller">{"".join(piller)}</div>{"".join(grupper)}</div>'
+        f'{"".join(valg)}<div class="bk-piller">{"".join(piller)}</div>'
+        f'<div class="bk-innhold">{"".join(grupper)}</div></div>'
     )
 
 
