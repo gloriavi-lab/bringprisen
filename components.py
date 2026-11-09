@@ -89,7 +89,7 @@ def topptekst(sidetittel: str):
 
     st.markdown(
         f'<div class="topptekst">'
-        f'<div><div class="merke-label">Netthandelsprisene · Fase 2 – Ekspertvurdering</div>'
+        f'<div><div class="merke-label">Bringprisen</div>'
         f'<div class="sidetittel">{sidetittel}</div></div>'
         f'<div class="hoyre">{jury_html}'
         f'<span class="status-prikk"><span class="prikk {prikk_klasse}"></span>{prikk_tekst}</span></div>'

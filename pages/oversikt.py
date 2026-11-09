@@ -37,8 +37,8 @@ fase_tekst = f"Fase {gjeldende_fase['Fase']} · {gjeldende_fase['Navn']}" if gje
 
 BANNER_HTML = (
     '<div class="banner">'
-    f'<div class="fase">Netthandelsprisene · {fase_tekst}</div>'
-    "<h1>Ekspertvurdering</h1>"
+    f'<div class="fase">Bringprisen · {fase_tekst}</div>'
+    "<h1>Bringprisen</h1>"
     "<p>Vurder butikkene på dine tildelte kriterier – gi score fra 1 til 5 og legg gjerne igjen en kommentar. "
     "Vurderingene lagres fortløpende i regnearket.</p>"
     "</div>"

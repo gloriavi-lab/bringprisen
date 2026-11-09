@@ -21,7 +21,7 @@ from styles import injiser_css
 LOGO_STI = "assets/bring-logo.svg"
 
 st.set_page_config(
-    page_title="Ekspertvurdering – Netthandelsprisene",
+    page_title="Bringprisen",
     page_icon=LOGO_STI if os.path.exists(LOGO_STI) else "🎓",
     layout="wide", initial_sidebar_state="collapsed",
 )
