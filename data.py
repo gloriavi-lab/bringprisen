@@ -55,8 +55,8 @@ SKALA_FORKLARING = (
 )
 
 KLASSE_DEFINISJON = [
-    ("Liten", ""),
-    ("Stor", ""),
+    ("Liten", "Opp til 100 MNOK"),
+    ("Stor", "Fra 100 MNOK"),
 ]
 KLASSER = [k for k, _ in KLASSE_DEFINISJON]
 

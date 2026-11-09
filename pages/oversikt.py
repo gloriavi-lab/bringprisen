@@ -71,7 +71,7 @@ st.divider()
 
 # ── Størrelsesklasser ──
 st.subheader("Størrelsesklasser", anchor=False)
-KLASSE_DEFINISJON = [("Liten", ""), ("Stor", "")]
+KLASSE_DEFINISJON = [("Liten", "Opp til 100 MNOK"), ("Stor", "Fra 100 MNOK")]
 antall_per_klasse = {k: 0 for k, _ in KLASSE_DEFINISJON}
 for info in butikker.values():
     if info.get("klasse") in antall_per_klasse:
