@@ -6,15 +6,11 @@ import os
 
 import streamlit as st
 
-from components import rutenett
+from components import kriterie_seksjon_html, rutenett
 from data import er_tall
 from jury import aktive_kriterier, aktiv_fase, fagfelt_liste, kriterier_per_fagfelt, mine_kriterier, read_criteria, read_faser, read_jury, read_veiledning
 from sheets import read_fase1_scores, read_ratings, read_stores
 from theme import FAGFELT_FARGE, KLASSE_IKON, KLASSE_TONE
-
-
-def _bryt_etter_skratrek(tekst: str) -> str:
-    return tekst.replace("/", "/<wbr>")
 
 
 sh = st.session_state.get("_sh")
@@ -98,21 +94,7 @@ if mine:
     st.caption("Dine tildelte kriterier er uthevet under. Klikk «Les mer» på et kriterium for skala og eksempler.")
 
 if FAGFELT:
-    kort_deler = []
-    for kat in FAGFELT:
-        krit_i_felt = KRITERIER_PER_FAGFELT[kat]
-        har_mine = any(k in mine for k in krit_i_felt)
-        klasse = " aktiv" if har_mine else ""
-        toppstripe = "" if har_mine else f'style="border-top-color:{FAGFELT_FARGE.get(kat, "#888")};"'
-        prikk = f'<span class="fagfelt-ikon" style="background:{FAGFELT_FARGE.get(kat, "#888")};"></span>'
-        punkter = "".join(
-            f'<li>{"<strong>" if k in mine else ""}{_bryt_etter_skratrek(k)}{"</strong>" if k in mine else ""}'
-            + (f' — <span style="color:var(--tekst-dempet);">{kriterium_info.get(k, {}).get("kort", "")}</span>' if kriterium_info.get(k, {}).get("kort") else "")
-            + "</li>"
-            for k in krit_i_felt
-        )
-        kort_deler.append(f'<div class="rutenett-kort{klasse}" {toppstripe}><h4>{prikk}{_bryt_etter_skratrek(kat)}</h4><ul>{punkter}</ul></div>')
-    st.markdown(f'<div class="rutenett">{"".join(kort_deler)}</div>', unsafe_allow_html=True)
+    st.html(kriterie_seksjon_html(FAGFELT, KRITERIER_PER_FAGFELT, kriterium_info, mine))
 
     with st.expander("Les mer om hvert kriterium (skala og eksempler)"):
         for kat in FAGFELT:

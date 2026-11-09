@@ -3,6 +3,7 @@
 import re
 import subprocess
 from datetime import datetime
+from html import escape
 
 import pandas as pd
 import streamlit as st
@@ -10,6 +11,78 @@ from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 
 from data import OSLO, er_tall
 from theme import FAGFELT_FARGE
+
+
+_KRITERIE_SEKSJON_CSS = """
+.bk-seksjon { color: #12301F; }
+.bk-piller { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.bk-pille {
+  padding: 8px 16px; border-radius: 999px; background: #E3EFD5;
+  color: #12301F !important; font-size: 14px; font-weight: 600;
+  text-decoration: none !important; white-space: nowrap;
+}
+.bk-gruppe {
+  display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 8px;
+  margin-bottom: 16px; scroll-margin-top: 80px;
+}
+.bk-gruppenavn {
+  display: flex; align-items: center; padding: 20px; border-radius: 16px;
+  background: #12301F; color: #FFFFFF; font-size: 18px; font-weight: 700; line-height: 1.3;
+}
+.bk-rader { display: flex; flex-direction: column; gap: 8px; }
+.bk-rad {
+  display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px;
+  border-radius: 16px; background: #E3EFD5;
+}
+.bk-rad:nth-child(even) { background: #F1F6EA; }
+.bk-rad.bk-min { box-shadow: inset 0 0 0 2px #12301F; }
+.bk-nr {
+  flex: 0 0 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: #86C35A; color: #12301F; font-size: 14px; font-weight: 700;
+}
+.bk-navn { color: #12301F; font-size: 16px; font-weight: 700; line-height: 1.3; }
+.bk-beskrivelse { margin-top: 3px; color: #2B4436; font-size: 14px; line-height: 1.45; }
+@media (max-width: 640px) {
+  .bk-piller { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .bk-gruppe { grid-template-columns: minmax(0, 1fr); }
+  .bk-gruppenavn { padding: 14px 16px; }
+}
+"""
+
+
+def kriterie_seksjon_html(fagfelt, kriterier_per_fagfelt, kriterium_info, mine=frozenset()):
+    """Bygger hele kriterieseksjonen på Oversikt som én st.html-blokk. Valgt
+    pille styres kun med CSS (:target + :has) siden st.html ikke kjører JS."""
+    piller, grupper, valgt_regler = [], [], []
+    for i, gruppe in enumerate(fagfelt, start=1):
+        anker = f"bk-gruppe-{i}"
+        nummer_treff = re.match(r"\s*(\d+)\.\s*(.*)", gruppe)
+        nummer, navn = nummer_treff.groups() if nummer_treff else (str(i), gruppe)
+        piller.append(f'<a class="bk-pille" href="#{anker}">{escape(nummer)} {escape(navn)}</a>')
+        valgt_regler.append(f'.bk-seksjon:has(#{anker}:target) a[href="#{anker}"]')
+
+        rader = []
+        for kriterium in kriterier_per_fagfelt[gruppe]:
+            kriterie_treff = re.match(r"\s*(\d+\.\d+)\s+(.*)", kriterium)
+            krit_nr, krit_navn = kriterie_treff.groups() if kriterie_treff else ("", kriterium)
+            beskrivelse = kriterium_info.get(kriterium, {}).get("kort", "")
+            rader.append(
+                f'<div class="bk-rad{" bk-min" if kriterium in mine else ""}">'
+                f'<div class="bk-nr">{escape(krit_nr)}</div>'
+                f'<div><div class="bk-navn">{escape(krit_navn)}</div>'
+                f'<div class="bk-beskrivelse">{escape(beskrivelse)}</div></div></div>'
+            )
+        grupper.append(
+            f'<div class="bk-gruppe" id="{anker}"><div class="bk-gruppenavn">{escape(navn)}</div>'
+            f'<div class="bk-rader">{"".join(rader)}</div></div>'
+        )
+
+    valgt_regler.append(".bk-seksjon:not(:has(.bk-gruppe:target)) .bk-pille:first-child")
+    valgt_css = ",\n".join(valgt_regler) + " { background: #12301F; color: #FFFFFF !important; }"
+    return (
+        f"<style>{_KRITERIE_SEKSJON_CSS}{valgt_css}</style>"
+        f'<div class="bk-seksjon"><div class="bk-piller">{"".join(piller)}</div>{"".join(grupper)}</div>'
+    )
 
 
 def hent_versjonsinfo():
