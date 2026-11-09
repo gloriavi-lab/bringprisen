@@ -25,7 +25,7 @@ JURY_FANE = "Jury"
 VEILEDNING_FANE = "Veiledning"
 FASER_FANE = "Faser"
 
-KRITERIER_HEADER = ["Fagfelt", "Kriterium", "Kort beskrivelse", "Utfyllende forklaring", "Skala 1", "Skala 3", "Skala 5", "Eksempler", "Fase", "Aktiv"]
+KRITERIER_HEADER = ["Fagfelt", "Kriterium", "Kort beskrivelse", "Utfyllende forklaring", "Skala 1", "Skala 3", "Skala 5", "Eksempler", "Fase", "Aktiv", "Steg", "Stegnummer"]
 JURY_GRUNNKOLONNER = ["Navn", "E-post", "Farge"]
 VEILEDNING_HEADER = ["Overskrift", "Tekst"]
 FASER_HEADER = ["Fase", "Navn", "Beskrivelse", "Status", "Startdato", "Sluttdato"]
@@ -224,8 +224,35 @@ def read_criteria(_sh):
             "eksempler": str(r.get("Eksempler", "")).strip(),
             "faser": [f.strip() for f in str(r.get("Fase", "")).split(",") if f.strip()],
             "aktiv": str(r.get("Aktiv", "")).strip().lower() == "ja",
+            "steg": str(r.get("Steg", "")).strip(),
+            "stegnummer": str(r.get("Stegnummer", "")).strip(),
         })
+        siste = resultat[-1]
+        siste["navn"] = _navn_uten_nummer(siste["kriterium"])
+        siste["visningsnavn"] = f'{siste["stegnummer"]} {siste["navn"]}'.strip() if siste["stegnummer"] else siste["kriterium"]
     return resultat
+
+
+def _navn_uten_nummer(kriterium):
+    """«3.6 Påminnelse …» → «Påminnelse …». Kolonnen Kriterium er nøkkelen
+    scorene kobles på og beholder derfor sitt opprinnelige nummer; det som
+    vises i appen er Stegnummer fra kundereisen."""
+    foran, _, bak = kriterium.partition(" ")
+    return bak.strip() if bak and foran.replace(".", "").isdigit() else kriterium
+
+
+def _steg_sortering(kriterium):
+    deler = kriterium["stegnummer"].split(".")
+    return [int(d) for d in deler] if all(d.isdigit() for d in deler) else [999]
+
+
+def kriterier_per_steg(kriterier):
+    """{steg: [kriterium, ...]} i kundereisens rekkefølge. Kriterier uten
+    Steg i regnearket havner sist, under sitt fagfelt."""
+    d = {}
+    for k in sorted(kriterier, key=_steg_sortering):
+        d.setdefault(k["steg"] or k["fagfelt"], []).append(k["kriterium"])
+    return d
 
 
 def aktive_kriterier(alle_kriterier, fase: str = None):

@@ -8,7 +8,7 @@ import streamlit as st
 
 from components import kriterie_seksjon_html, rutenett
 from data import er_tall
-from jury import aktive_kriterier, aktiv_fase, fagfelt_liste, kriterier_per_fagfelt, mine_kriterier, read_criteria, read_faser, read_jury, read_veiledning
+from jury import aktive_kriterier, aktiv_fase, kriterier_per_steg, mine_kriterier, read_criteria, read_faser, read_jury, read_veiledning
 from sheets import read_fase1_scores, read_ratings, read_stores
 from theme import FAGFELT_FARGE, KLASSE_IKON, KLASSE_TONE
 
@@ -25,8 +25,8 @@ if sh:
         pass
 
 kriterier_fase3 = aktive_kriterier(alle_kriterier, fase="Fase 3")
-FAGFELT = fagfelt_liste(kriterier_fase3)
-KRITERIER_PER_FAGFELT = kriterier_per_fagfelt(kriterier_fase3)
+KRITERIER_PER_STEG = kriterier_per_steg(kriterier_fase3)
+STEG = list(KRITERIER_PER_STEG)
 kriterium_info = {k["kriterium"]: k for k in kriterier_fase3}
 gjeldende_fase = aktiv_fase(faser) if faser else None
 fase_tekst = f"Fase {gjeldende_fase['Fase']} · {gjeldende_fase['Navn']}" if gjeldende_fase else "Fase 3 · Ekspertvurdering"
@@ -86,27 +86,12 @@ st.markdown(f'<div class="rutenett tre-per-rad">{"".join(deler)}</div>', unsafe_
 
 st.divider()
 
-# ── Kriterier per fagfelt ──
-st.subheader("Kriterier per fagfelt", anchor=False)
+# ── Kriterier etter kundereisen ──
 jurynavn = st.session_state.get("_jurynavn")
 mine = mine_kriterier(jury, jurynavn) if jurynavn else set()
-if mine:
-    st.caption("Dine tildelte kriterier er uthevet under. Klikk «Les mer» på et kriterium for skala og eksempler.")
 
-if FAGFELT:
-    st.html(kriterie_seksjon_html(FAGFELT, KRITERIER_PER_FAGFELT, kriterium_info, mine))
-
-    with st.expander("Les mer om hvert kriterium (skala og eksempler)"):
-        for kat in FAGFELT:
-            st.markdown(f"**{kat}**")
-            for k in KRITERIER_PER_FAGFELT[kat]:
-                info_k = kriterium_info.get(k, {})
-                st.markdown(f"_{k}_")
-                if info_k.get("utfyllende"):
-                    st.caption(info_k["utfyllende"])
-                st.caption(f"1: {info_k.get('skala1', '–')}  ·  3: {info_k.get('skala3', '–')}  ·  5: {info_k.get('skala5', '–')}")
-                if info_k.get("eksempler"):
-                    st.caption(f"Eksempler: {info_k['eksempler']}")
+if STEG:
+    st.html(kriterie_seksjon_html(KRITERIER_PER_STEG, kriterium_info, mine))
 else:
     st.caption("Ingen kriterier funnet – sjekk fanen «Kriterier» i regnearket.")
 
@@ -123,7 +108,7 @@ else:
     FARGEPALETT = ["#4472C4", "#70AD47", "#ED7D31", "#7030A0", "#5B9BD5", "#C8102E"]
     kort = []
     for i, navn in enumerate(sorted(jury.keys())):
-        beskrivelse = beskriv_tildeling(navn, jury, KRITERIER_PER_FAGFELT)
+        beskrivelse = beskriv_tildeling(navn, jury, KRITERIER_PER_STEG)
         merkelapper = "".join(
             f'<span class="klasse-badge" style="margin:2px 4px 2px 0;border-color:{FARGEPALETT[i % len(FARGEPALETT)]};">{d.strip()}</span>'
             for d in beskrivelse.split("·")
@@ -133,20 +118,20 @@ else:
     st.markdown(f'<div class="rutenett kun-mobil-vis">{kort_html}</div>', unsafe_allow_html=True)
 
     # Full matrise (skjules på mobil via CSS)
-    if FAGFELT:
+    if STEG:
         navn_rader = sorted(jury.keys())
         thead = "<tr><th style='text-align:left;padding:6px 10px;'>Jurymedlem</th>"
-        for kat in FAGFELT:
-            for k in KRITERIER_PER_FAGFELT[kat]:
-                thead += f'<th style="background:{FAGFELT_FARGE.get(kat, "#888")};color:white;font-size:11px;padding:6px 4px;writing-mode:vertical-rl;text-orientation:mixed;max-width:26px;">{k[:28]}</th>'
+        for kat in STEG:
+            for k in KRITERIER_PER_STEG[kat]:
+                thead += f'<th style="background:{FAGFELT_FARGE.get(kat, "#888")};color:white;font-size:11px;padding:6px 4px;writing-mode:vertical-rl;text-orientation:mixed;max-width:26px;">{kriterium_info[k]["visningsnavn"][:28]}</th>'
         thead += "</tr>"
 
         rader_html = ""
-        dekning = {k: 0 for kat in FAGFELT for k in KRITERIER_PER_FAGFELT[kat]}
+        dekning = {k: 0 for kat in STEG for k in KRITERIER_PER_STEG[kat]}
         for navn in navn_rader:
             rad = f"<tr><td style='padding:6px 10px;font-weight:600;white-space:nowrap;'>{navn}</td>"
-            for kat in FAGFELT:
-                for k in KRITERIER_PER_FAGFELT[kat]:
+            for kat in STEG:
+                for k in KRITERIER_PER_STEG[kat]:
                     tildelt = k in mine_kriterier(jury, navn)
                     if tildelt:
                         dekning[k] += 1
@@ -155,8 +140,8 @@ else:
             rader_html += rad
 
         dekning_rad = "<tr><td style='padding:6px 10px;font-weight:700;'>Dekning</td>"
-        for kat in FAGFELT:
-            for k in KRITERIER_PER_FAGFELT[kat]:
+        for kat in STEG:
+            for k in KRITERIER_PER_STEG[kat]:
                 antall = dekning[k]
                 farge = "color:var(--feil);font-weight:800;" if antall == 0 else "color:var(--tekst-dempet);"
                 dekning_rad += f"<td style='text-align:center;{farge}'>{antall}</td>"

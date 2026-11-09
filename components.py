@@ -14,7 +14,8 @@ from theme import FAGFELT_FARGE
 
 
 _KRITERIE_SEKSJON_CSS = """
-.bk-seksjon { color: #12301F; }
+.bk-tittel { font-size: 22px; font-weight: 700; line-height: 1.3; }
+.bk-ingress { margin: 2px 0 14px 0; font-size: 15px; }
 .bk-piller { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .bk-pille {
   padding: 8px 16px; border-radius: 999px; background: #E3EFD5;
@@ -50,38 +51,38 @@ _KRITERIE_SEKSJON_CSS = """
 """
 
 
-def kriterie_seksjon_html(fagfelt, kriterier_per_fagfelt, kriterium_info, mine=frozenset()):
+def kriterie_seksjon_html(per_steg, kriterium_info, mine=frozenset()):
     """Bygger hele kriterieseksjonen på Oversikt som én st.html-blokk. Valgt
     pille styres kun med CSS (:target + :has) siden st.html ikke kjører JS."""
     piller, grupper, valgt_regler = [], [], []
-    for i, gruppe in enumerate(fagfelt, start=1):
+    for i, (steg, kriterier) in enumerate(per_steg.items(), start=1):
         anker = f"bk-gruppe-{i}"
-        nummer_treff = re.match(r"\s*(\d+)\.\s*(.*)", gruppe)
-        nummer, navn = nummer_treff.groups() if nummer_treff else (str(i), gruppe)
-        piller.append(f'<a class="bk-pille" href="#{anker}">{escape(nummer)} {escape(navn)}</a>')
+        nummer = kriterium_info.get(kriterier[0], {}).get("stegnummer", "").split(".")[0] or str(i)
+        piller.append(f'<a class="bk-pille" href="#{anker}">{escape(nummer)} {escape(steg)}</a>')
         valgt_regler.append(f'.bk-seksjon:has(#{anker}:target) a[href="#{anker}"]')
 
         rader = []
-        for kriterium in kriterier_per_fagfelt[gruppe]:
-            kriterie_treff = re.match(r"\s*(\d+\.\d+)\s+(.*)", kriterium)
-            krit_nr, krit_navn = kriterie_treff.groups() if kriterie_treff else ("", kriterium)
-            beskrivelse = kriterium_info.get(kriterium, {}).get("kort", "")
+        for kriterium in kriterier:
+            info = kriterium_info.get(kriterium, {})
             rader.append(
                 f'<div class="bk-rad{" bk-min" if kriterium in mine else ""}">'
-                f'<div class="bk-nr">{escape(krit_nr)}</div>'
-                f'<div><div class="bk-navn">{escape(krit_navn)}</div>'
-                f'<div class="bk-beskrivelse">{escape(beskrivelse)}</div></div></div>'
+                f'<div class="bk-nr">{escape(info.get("stegnummer", ""))}</div>'
+                f'<div><div class="bk-navn">{escape(info.get("navn", kriterium))}</div>'
+                f'<div class="bk-beskrivelse">{escape(info.get("kort", ""))}</div></div></div>'
             )
         grupper.append(
-            f'<div class="bk-gruppe" id="{anker}"><div class="bk-gruppenavn">{escape(navn)}</div>'
+            f'<div class="bk-gruppe" id="{anker}"><div class="bk-gruppenavn">{escape(steg)}</div>'
             f'<div class="bk-rader">{"".join(rader)}</div></div>'
         )
 
     valgt_regler.append(".bk-seksjon:not(:has(.bk-gruppe:target)) .bk-pille:first-child")
     valgt_css = ",\n".join(valgt_regler) + " { background: #12301F; color: #FFFFFF !important; }"
+    uthevet = " Dine tildelte kriterier er uthevet." if mine else ""
     return (
         f"<style>{_KRITERIE_SEKSJON_CSS}{valgt_css}</style>"
-        f'<div class="bk-seksjon"><div class="bk-piller">{"".join(piller)}</div>{"".join(grupper)}</div>'
+        f'<div class="bk-seksjon"><div class="bk-tittel">Del 1 – Nettbutikken (alle nettbutikker)</div>'
+        f'<div class="bk-ingress">Hvert kriterium får en score fra 1 til 5.{uthevet}</div>'
+        f'<div class="bk-piller">{"".join(piller)}</div>{"".join(grupper)}</div>'
     )
 
 

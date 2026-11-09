@@ -23,14 +23,14 @@ import streamlit as st
 from components import feilmelding_tekst, fremdriftslinje, klasse_badge, lagringsstatus, scroll_til_toppen, status_merkelapp_html, topptekst, tom_tilstand, vis_feil
 from data import IKKE_VURDERT, grupper_vurderinger, mine_scorer, naa_norsk, normalize_score, offisiell_celleverdi, status_for_scorer
 from jury import (
-    aktive_kriterier, beskriv_tildeling, gjeldende_fase_streng, kriterier_per_fagfelt, mine_kriterier, read_criteria,
+    aktive_kriterier, beskriv_tildeling, gjeldende_fase_streng, kriterier_per_fagfelt, kriterier_per_steg, mine_kriterier, read_criteria,
     read_faser, read_jury,
 )
 from sheets import (
     mal_handling, read_generelle_kommentarer, read_ratings, read_stores, read_vurderinger,
     skriv_mange_til_farget_fane, upsert_generell_kommentar, upsert_mange_vurderinger,
 )
-from theme import FAGFELT_FARGE, STATUS_FARGE, STATUS_TEKST, STATUS_TONE
+from theme import STATUS_FARGE, STATUS_TEKST, STATUS_TONE
 
 topptekst("Vurdering")
 
@@ -69,7 +69,8 @@ if _gjeldende_fase_txt:
     butikker = {navn: info for navn, info in butikker.items() if not info.get("fase") or info.get("fase") == _gjeldende_fase_txt}
 
 kriterier_fase3 = aktive_kriterier(alle_kriterier, fase="Fase 3")
-kriterier_per_felt_alle = kriterier_per_fagfelt(kriterier_fase3)
+kriterier_per_felt_alle = kriterier_per_fagfelt(kriterier_fase3)  # kun nøkkel ved lagring
+kriterier_per_steg_alle = kriterier_per_steg(kriterier_fase3)  # det som vises
 kriterium_info = {k["kriterium"]: k for k in kriterier_fase3}
 
 if not butikker:
@@ -86,7 +87,7 @@ navn_liste_jury = sorted(jury.keys())
 tc1, tc2 = st.columns([4, 1])
 with tc1:
     jurynavn = st.selectbox("Ditt navn (jurymedlem)", navn_liste_jury, key="_jurynavn")
-    beskrivelse = beskriv_tildeling(jurynavn, jury, kriterier_per_felt_alle)
+    beskrivelse = beskriv_tildeling(jurynavn, jury, kriterier_per_steg_alle)
     if beskrivelse:
         st.caption(f"_{beskrivelse}_")
 with tc2:
@@ -101,6 +102,8 @@ mine_per_felt = {felt: [k for k in krit if k in mine] for felt, krit in kriterie
 mine_per_felt = {felt: krit for felt, krit in mine_per_felt.items() if krit}
 mine_kriterier_flat = [k for krit in mine_per_felt.values() for k in krit]
 krit_til_fagfelt = {k: felt for felt, krit in mine_per_felt.items() for k in krit}
+mine_per_steg = {steg: [k for k in krit if k in mine] for steg, krit in kriterier_per_steg_alle.items()}
+mine_per_steg = {steg: krit for steg, krit in mine_per_steg.items() if krit}
 
 try:
     alle_vurderinger = read_vurderinger(sh)
@@ -134,12 +137,12 @@ def status(navn):
     return status_for_scorer(grid_scorer_for(navn), mine_kriterier_flat)
 
 
-def status_per_fagfelt(navn):
+def status_per_steg(navn):
     scorer = grid_scorer_for(navn)
     resultat = {}
-    for fagfelt, kriterier in mine_per_felt.items():
+    for steg, kriterier in mine_per_steg.items():
         besvart = sum(1 for k in kriterier if k in scorer)
-        resultat[fagfelt] = (besvart, len(kriterier))
+        resultat[steg] = (besvart, len(kriterier))
     return resultat
 
 
@@ -261,7 +264,7 @@ def _lagre_denne_impl(navn):
 
     if manglende_kommentar:
         ord = "kriterium" if len(manglende_kommentar) == 1 else "kriterier"
-        st.session_state["_lagringstilstand"] = ("feil", f"{len(manglende_kommentar)} {ord} mangler kommentar: " + ", ".join(manglende_kommentar))
+        st.session_state["_lagringstilstand"] = ("feil", f"{len(manglende_kommentar)} {ord} mangler kommentar: " + ", ".join(kriterium_info.get(k, {}).get("visningsnavn", k) for k in manglende_kommentar))
         return False
 
     skrevet = {krit: (score, kommentar) for _, krit, score, kommentar in kriterier_a_lagre}
@@ -456,13 +459,14 @@ def vis_vurderingsvisning():
         st.rerun()
 
     st.write("")
-    for fagfelt, kriterier in mine_per_felt.items():
-        farge = FAGFELT_FARGE.get(fagfelt, "#888")
-        st.markdown(f'<div style="border-left:4px solid {farge};padding-left:10px;margin:14px 0 10px 0;font-weight:700;">{fagfelt}</div>', unsafe_allow_html=True)
+    for steg, kriterier in mine_per_steg.items():
+        steg_nummer = kriterium_info.get(kriterier[0], {}).get("stegnummer", "").split(".")[0]
+        st.markdown(f'<div style="border-left:4px solid #12301F;padding-left:10px;margin:14px 0 10px 0;font-weight:700;">{steg_nummer} {steg}</div>', unsafe_allow_html=True)
         for krit in kriterier:
             eksisterende = mine_oppslag.get((navn, krit), {})  # MIN egen kommentar (loggen)
             grid_score = normalize_score(fargede_fane_data.get(navn, {}).get("scorer", {}).get(krit))  # offisiell score (den fargede fanen)
             info_k = kriterium_info.get(krit, {})
+            visningsnavn = info_k.get("visningsnavn", krit)
             kom_key = f"kom_krit_{navn}_{krit}"
             seg_key = f"seg_{navn}_{krit}"
 
@@ -474,7 +478,7 @@ def vis_vurderingsvisning():
             mangler_na = isinstance(na_valgt, (int, float)) and na_valgt <= 3 and not na_kommentar
 
             tittel_farge = "color:#C8102E;" if mangler_na else ""
-            st.markdown(f"<span style='{tittel_farge}font-weight:700;'>{krit}</span>" + (f"  \n_{info_k['kort']}_" if info_k.get("kort") else ""), unsafe_allow_html=True)
+            st.markdown(f"<span style='{tittel_farge}font-weight:700;'>{visningsnavn}</span>" + (f"  \n_{info_k['kort']}_" if info_k.get("kort") else ""), unsafe_allow_html=True)
             with st.popover("Les mer", icon=":material/help:"):
                 if info_k.get("utfyllende"):
                     st.markdown(info_k["utfyllende"])
@@ -491,7 +495,7 @@ def vis_vurderingsvisning():
             pakrevd = isinstance(valg, (int, float)) and valg <= 3
             st.text_area(
                 "Kommentar", value=eksisterende.get("kommentar", ""),
-                key=kom_key, placeholder=f"Kommentar til «{krit}»" + (" – påkrevd ved lav score" if pakrevd else "…"),
+                key=kom_key, placeholder=f"Kommentar til «{visningsnavn}»" + (" – påkrevd ved lav score" if pakrevd else "…"),
                 height=68,
             )
             if mangler_na:
@@ -653,7 +657,7 @@ def vis_butikkliste():
     for navn in navn_filtrert[:vis_antall]:
         s = status(navn)
         info = butikker[navn]
-        per_felt = status_per_fagfelt(navn)
+        per_felt = status_per_steg(navn)
         besvart_totalt = sum(b for b, _ in per_felt.values())
         totalt_mine = sum(t for _, t in per_felt.values())
         tooltip = " · ".join(f"{f}: {b}/{t}" for f, (b, t) in per_felt.items())
