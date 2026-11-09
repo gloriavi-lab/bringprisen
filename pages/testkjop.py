@@ -106,6 +106,8 @@ status = beregn_testkjop_status(alle_steg)
 dc1, dc2 = st.columns([4, 1])
 with dc1:
     st.markdown(f"## {apnet_butikk}")
+    if butikker.get(apnet_butikk, {}).get("url"):
+        st.link_button("Besøk butikk", butikker[apnet_butikk]["url"], icon=":material/open_in_new:")
 with dc2:
     _status_badge(status)
 
@@ -143,7 +145,11 @@ for rad_start in range(0, len(TIDSLINJE_STEG), 4):
             if st.button(merke, key=f"tidslinje_{steg}", use_container_width=True, type="primary" if ferdig else "secondary"):
                 st.session_state["_tk_apent_steg"] = steg
                 st.rerun()
-_apent_steg = st.session_state.get("_tk_apent_steg")
+            kriterier_steg = TESTKJOP_KRITERIER.get(steg, [])
+            if kriterier_steg:
+                fra, til = kriterier_steg[0].split(" ")[0], kriterier_steg[-1].split(" ")[0]
+                st.caption(f"Kriterier {fra}–{til}" if fra != til else f"Kriterium {fra}")
+_apent_steg = st.session_state.get("_tk_apent_steg") or TIDSLINJE_STEG[0]
 if _apent_steg:
     st.caption(f"Åpent steg: **{_apent_steg}**")
 
@@ -209,11 +215,23 @@ def _render_felt(feltnavn, typ, label, key_prefix, eksisterende):
     if typ == "text":
         return st.text_input(label, value=eksisterende, key=key)
     if typ == "date":
+        # Tom til den er fylt ut: datoene går til Del 2 i arket og styrer status.
         try:
-            default_dato = _datetime.strptime(eksisterende, "%Y-%m-%d").date() if eksisterende else naa_norsk().date()
+            default_dato = _datetime.strptime(eksisterende, "%Y-%m-%d").date() if eksisterende else None
         except ValueError:
-            default_dato = naa_norsk().date()
-        return st.date_input(label, value=default_dato, key=key).isoformat()
+            default_dato = None
+        valgt = st.date_input(label, value=default_dato, key=key, format="DD.MM.YYYY")
+        return valgt.isoformat() if valgt else ""
+    if typ == "tidspunkt_valgfri":
+        try:
+            verdi = _datetime.strptime(eksisterende, "%Y-%m-%d %H:%M") if eksisterende else None
+        except ValueError:
+            verdi = None
+        st.caption(label)
+        c1, c2 = st.columns(2)
+        dato = c1.date_input("Dato", value=verdi.date() if verdi else None, key=f"{key}_dato", label_visibility="collapsed", format="DD.MM.YYYY")
+        tid = c2.time_input("Klokkeslett", value=verdi.time() if verdi else None, key=f"{key}_tid", label_visibility="collapsed")
+        return f"{dato.isoformat()} {tid.strftime('%H:%M')}" if dato and tid else ""
     if typ == "tidspunkt":
         return _tidspunkt_widgets(key, eksisterende, label=label)
     return ""
@@ -221,11 +239,13 @@ def _render_felt(feltnavn, typ, label, key_prefix, eksisterende):
 
 STEG_FELT_SPEC = {
     "Kjøp og levering": [
+        ("Forhåndsmeldt (EDI)", "tidspunkt_valgfri", "Forhåndsmeldt (EDI)"),
+        ("Innlevert terminal", "tidspunkt_valgfri", "Innlevert terminal"),
         ("ETA vist", "ja_nei", "ETA vist?"),
         ("Lovet leveringsdato", "date", "Lovet leveringsdato"),
         ("Måtte opprette konto", "ja_nei", "Måtte opprette konto?"),
         ("Totalpris vist", "ja_nei", "Totalpris vist før betaling?"),
-        ("Faktisk leveringsdato", "date", "Faktisk leveringsdato"),
+        ("Faktisk leveringsdato", "date", "Levert (faktisk leveringsdato)"),
         ("Emballasje", "text", "Emballasje (beskrivelse)"),
         ("Produkt som beskrevet", "ja_nei", "Produkt som beskrevet?"),
         ("Returinfo i pakken", "ja_nei", "Returinfo i pakken?"),
@@ -243,7 +263,7 @@ STEG_FELT_SPEC = {
         ("Beskjed retur tidspunkt", "tidspunkt", "Tidspunkt for beskjeden om at retur er mottatt"),
     ],
     "Pengene tilbake": [
-        ("Dato refusjon", "date", "Dato for refusjon"),
+        ("Dato refusjon", "date", "Penger tilbake (dato for refusjon)"),
         ("Fikk beskjed refusjon", "ja_nei", "Fikk beskjed om refusjon?"),
     ],
 }
@@ -273,7 +293,7 @@ def _render_generisk_steg(steg):
     # relevant der. «Retur» sitt tidspunkt har en egen, tydeligere etikett
     # siden det lett forveksles med det separate «Tidspunkt for beskjeden»-
     # feltet lenger ned (de to måler ulike ting - se STEG_FELT_SPEC).
-    TIDSPUNKT_LABEL = {"Retur": "Tidspunkt returen ble sendt (brukes til å beregne dager til refusjon)"}
+    TIDSPUNKT_LABEL = {"Kjøp og levering": "Bestilt", "Retur": "Retur sendt (brukes til å beregne dager til refusjon)"}
     viser_tidspunkt = steg not in ("Kommunikasjon", "Pengene tilbake", "Samlet vurdering")
     tidspunkt = (
         _tidspunkt_widgets(f"{key_prefix}_tidspunkt", eksisterende.get("Tidspunkt", ""), label=TIDSPUNKT_LABEL.get(steg, "Tidspunkt"))

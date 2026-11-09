@@ -26,6 +26,9 @@ FAGFELT_FARGE = {
     "Kjøp/inspirasjon/personalisering": "var(--fagfelt-kjop)",
     "Markedsføring/kundedialog": "var(--fagfelt-markedsforing)",
     "Innovasjon": "var(--fagfelt-innovasjon)",
+    "1. Leveringsvalg og relevans": "#1F6FB2",
+    "2. Integrasjon og checkout-opplevelse": "#2E7D4F",
+    "3. Informasjon og forutsigbarhet før kjøp": "#7B3FA0",
 }
 # Ekspertområdene i Bringprisen (Del 1) – brukt i juryoversikten på Oversikt
 STEG_FARGE = {

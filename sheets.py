@@ -1800,7 +1800,7 @@ TESTKJOP_KRITERIER = {
     "Samlet vurdering": ["7.1 Smart bruk av Bring-løsninger"],
 }
 _TESTKJOP_KRITERIE_KOLONNER = [k for kriterier in TESTKJOP_KRITERIER.values() for k in kriterier]
-TESTKJOP_HEADER = TESTKJOP_FELLES_KOLONNER + TESTKJOP_STEG_KOLONNER + ["Sist endret"] + _TESTKJOP_KRITERIE_KOLONNER
+TESTKJOP_HEADER = TESTKJOP_FELLES_KOLONNER + TESTKJOP_STEG_KOLONNER + ["Sist endret"] + _TESTKJOP_KRITERIE_KOLONNER + ["Forhåndsmeldt (EDI)", "Innlevert terminal"]
 
 # Samme fargepalett som FAGFELT_FARGE (theme.py) sine rå hex-verdier, én
 # farge per steg-gruppe - gir Testkjøp-fanen en lignende gruppert, farget
