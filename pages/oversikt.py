@@ -71,7 +71,7 @@ st.divider()
 
 # ── Størrelsesklasser ──
 st.subheader("Størrelsesklasser", anchor=False)
-KLASSE_DEFINISJON = [("Liten", "Under 50 mill kr"), ("Medium", "50–250 mill kr"), ("Stor", "Over 250 mill kr")]
+KLASSE_DEFINISJON = [("Liten", ""), ("Stor", "")]
 antall_per_klasse = {k: 0 for k, _ in KLASSE_DEFINISJON}
 for info in butikker.values():
     if info.get("klasse") in antall_per_klasse:
@@ -82,7 +82,7 @@ deler = [
     f'<div style="font-weight:700;">{k}</div><div class="belop">{belop}</div></div>'
     for k, belop in KLASSE_DEFINISJON
 ]
-st.markdown(f'<div class="rutenett tre-per-rad">{"".join(deler)}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="rutenett to-per-rad">{"".join(deler)}</div>', unsafe_allow_html=True)
 
 st.divider()
 

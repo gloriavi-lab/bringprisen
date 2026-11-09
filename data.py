@@ -55,9 +55,8 @@ SKALA_FORKLARING = (
 )
 
 KLASSE_DEFINISJON = [
-    ("Liten", "Under 50 mill kr"),
-    ("Medium", "50–250 mill kr"),
-    ("Stor", "Over 250 mill kr"),
+    ("Liten", ""),
+    ("Stor", ""),
 ]
 KLASSER = [k for k, _ in KLASSE_DEFINISJON]
 

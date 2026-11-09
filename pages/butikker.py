@@ -113,7 +113,7 @@ deler = [
 ] + [
     f'<div class="rutenett-kort" style="background:{KLASSE_TONE.get(k, "")};border-top-color:transparent;">'
     f'<div class="kort-ikon">{KLASSE_IKON.get(k, "")}</div><div class="stor-tall">{klasser_count.get(k, 0)}</div><div style="font-weight:700;">{k}</div></div>'
-    for k in ["Liten", "Medium", "Stor"]
+    for k in ["Liten", "Stor"]
 ]
 st.markdown(f'<div class="rutenett">{"".join(deler)}</div>', unsafe_allow_html=True)
 

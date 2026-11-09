@@ -611,7 +611,7 @@ def _les_butikkliste(ws, grunn):
     formatert = _rå_formatert(ws)
     formler = _rå_formel(ws)
     butikker, advarsler = {}, []
-    gyldige_klasser = {"Liten", "Medium", "Stor"}
+    gyldige_klasser = {"Liten", "Stor"}
     kol_butikk, kol_klasse = grunn.get("Butikk"), grunn.get("Klasse")
     kol_bransje, kol_url = grunn.get("Bransje"), grunn.get("URL")
     kol_fase = grunn.get("Fase")
@@ -622,7 +622,7 @@ def _les_butikkliste(ws, grunn):
             continue
         klasse = rad[kol_klasse - 1].strip() if kol_klasse and len(rad) >= kol_klasse else ""
         if klasse and klasse not in gyldige_klasser:
-            advarsler.append(f"Rad {r} i '{ws.title}': «{navn}» har ukjent størrelsesklasse «{klasse}» (ventet Liten/Medium/Stor).")
+            advarsler.append(f"Rad {r} i '{ws.title}': «{navn}» har ukjent størrelsesklasse «{klasse}» (ventet Liten/Stor).")
         url = ""
         if kol_url and len(formler[r - 1]) >= kol_url:
             url = _uthent_url(formler[r - 1][kol_url - 1])

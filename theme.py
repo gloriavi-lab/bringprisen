@@ -36,8 +36,8 @@ STEG_FARGE = {
 GRUNNKOLONNE_FARGE = "#203864"  # Butikk/Jurymedlem/Klasse/Bransje/URL/Snitt totalt (foreløpig ubrukt i appen)
 
 # Størrelsesklasser – samme toner brukt på Oversikt og Butikker-siden
-KLASSE_IKON = {"Liten": "🌱", "Medium": "🌿", "Stor": "🌳"}
-KLASSE_TONE = {"Liten": "var(--klasse-liten)", "Medium": "var(--klasse-medium)", "Stor": "var(--klasse-stor)"}
+KLASSE_IKON = {"Liten": "🌱", "Stor": "🌳"}
+KLASSE_TONE = {"Liten": "var(--klasse-liten)", "Stor": "var(--klasse-stor)"}
 
 STATUS_FARGE = {"Ferdig": "var(--status-ferdig)", "Påbegynt": "var(--status-pabegynt)", "Ikke startet": "var(--status-ikke-startet)"}
 STATUS_TONE = {"Ferdig": "var(--status-tone-ferdig)", "Påbegynt": "var(--status-tone-pabegynt)", "Ikke startet": "var(--status-tone-ikke-startet)"}

@@ -38,7 +38,6 @@ CSS = f"""
 
     /* Størrelsesklasse-toner (theme.KLASSE_TONE) – pastell-bakgrunner */
     --klasse-liten: #E7F3EC;
-    --klasse-medium: #E6F0F5;
     --klasse-stor: #FBF1E0;
 
     /* Status (theme.STATUS_FARGE/STATUS_TONE) – gjenbruker --gronn for Ferdig */
@@ -74,7 +73,6 @@ CSS = f"""
            pastell, bare mørk-tilpasset i stedet for bare å gjenbruke den
            lyse (nesten hvite) fargen rått på en mørk bakgrunn. */
         --klasse-liten: color-mix(in srgb, #1E8E5A 18%, var(--kort-bakgrunn));
-        --klasse-medium: color-mix(in srgb, #4472C4 18%, var(--kort-bakgrunn));
         --klasse-stor: color-mix(in srgb, #ED7D31 18%, var(--kort-bakgrunn));
         --status-tone-ferdig: color-mix(in srgb, #1E8E5A 18%, var(--kort-bakgrunn));
         --status-tone-pabegynt: color-mix(in srgb, #C8A200 18%, var(--kort-bakgrunn));
@@ -149,8 +147,9 @@ div[data-testid="stForm"] {{ border: 1px solid var(--kant); border-radius: 14px;
    faktisk tvinger lik bredde uansett innhold. */
 .rutenett {{ display:grid; gap:16px; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: stretch; }}
 .rutenett.tre-per-rad {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+.rutenett.to-per-rad {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
 @media (max-width: 1100px) {{ .rutenett {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }} }}
-@media (max-width: 640px) {{ .rutenett, .rutenett.tre-per-rad {{ grid-template-columns: minmax(0, 1fr); }} }}
+@media (max-width: 640px) {{ .rutenett, .rutenett.tre-per-rad, .rutenett.to-per-rad {{ grid-template-columns: minmax(0, 1fr); }} }}
 .rutenett-kort {{ background:var(--kort-bakgrunn); border:1px solid var(--kant); border-radius:14px; padding:20px 22px; display:flex; flex-direction:column; border-top:4px solid var(--kant); min-width:0; }}
 .rutenett-kort.aktiv {{ border:1.5px solid var(--merke); border-top:4px solid var(--merke); box-shadow: 0 0 0 3px color-mix(in srgb, var(--merke) 15%, transparent); }}
 .rutenett-kort.farget {{ color:white; }}
