@@ -1775,7 +1775,7 @@ TESTKJOP_FANE = "Testkjøp"
 # dekker tidligere Kassen+Levering+Utpakking – slått sammen til ett
 # steg/én rad. Retur og Pengene tilbake er fortsatt TO separate steg (se
 # jury.beregn_testkjop_status for statusutledningen).
-TESTKJOP_TIDSLINJE_STEG = ["Kjøp og levering", "Kommunikasjon", "Kundeservice", "Retur", "Pengene tilbake"]
+TESTKJOP_TIDSLINJE_STEG = ["Kjøp og levering", "Kommunikasjon", "Kundeservice", "Retur", "Pengene tilbake", "Samlet vurdering"]
 TESTKJOP_FELLES_KOLONNER = ["Butikk", "Jurymedlem", "Steg", "Tidspunkt", "Score", "Kommentar"]
 # Steg-spesifikke kolonner, én kolonne per felt. Kolonnenavnene er uendret
 # fra før sammenslåingen av Kassen+Levering+Utpakking (ingen skjemaendring
@@ -1787,7 +1787,20 @@ TESTKJOP_STEG_KOLONNER = [
     "Har returløsning", "Avstand innlevering", "Beskjed retur mottatt", "Beskjed retur tidspunkt",  # «Retur»
     "Dato refusjon", "Fikk beskjed refusjon",  # «Pengene tilbake»
 ]
-TESTKJOP_HEADER = TESTKJOP_FELLES_KOLONNER + TESTKJOP_STEG_KOLONNER + ["Sist endret"]
+# Bringprisens kriterier 4.1–7.1 per steg. Hvert kriterium er én kolonne
+# etter «Sist endret», og «Del 2 – Prøvekjøp» henter snittet med formler.
+TESTKJOP_KRITERIER = {
+    "Kjøp og levering": ["4.1 Tid fra bestilling til innlevering", "4.2 Holder det de lover", "4.3 Levert som lovet", "4.4 Emballasje"],
+    "Kommunikasjon": [
+        "5.1 Forventningsstyring i ordrebekreftelsen", "5.2 Info om sporing i Posten-appen", "5.3 Bilde og navn på varene",
+        "5.4 Forståelig avsendernavn", "5.5 Logo i sporingen",
+    ],
+    "Retur": ["6.1 Returinfo", "6.2 Returvilkår i pakken", "6.3 Enkel og fleksibel retur", "6.4 Prisnivå retur", "6.5 Status og bekreftelse på retur"],
+    "Pengene tilbake": ["6.6 Rask tilbakebetaling"],
+    "Samlet vurdering": ["7.1 Smart bruk av Bring-løsninger"],
+}
+_TESTKJOP_KRITERIE_KOLONNER = [k for kriterier in TESTKJOP_KRITERIER.values() for k in kriterier]
+TESTKJOP_HEADER = TESTKJOP_FELLES_KOLONNER + TESTKJOP_STEG_KOLONNER + ["Sist endret"] + _TESTKJOP_KRITERIE_KOLONNER
 
 # Samme fargepalett som FAGFELT_FARGE (theme.py) sine rå hex-verdier, én
 # farge per steg-gruppe - gir Testkjøp-fanen en lignende gruppert, farget
@@ -1888,7 +1901,12 @@ def write_testkjop_steg(sh, butikk, jurymedlem, steg, felter):
     # havner verdiene i feil kolonne i regneark som ble opprettet før et felt
     # ble lagt til eller fjernet. Felt som ikke finnes lenger skrives tomme.
     fane_header = rader[0] if rader and rader[0] else TESTKJOP_HEADER
-    rad_ut = [str(verdier.get(kol, "")) for kol in fane_header]
+    # Kriteriescorer skrives som tall, ellers ignorerer formlene i Del 2 dem.
+    def _celle(kol):
+        verdi = str(verdier.get(kol, ""))
+        return int(verdi) if kol in _TESTKJOP_KRITERIE_KOLONNER and verdi.isdigit() else verdi
+
+    rad_ut = [_celle(kol) for kol in fane_header]
     siste_bokstav = gspread.utils.rowcol_to_a1(1, len(fane_header)).rstrip("0123456789")
     ws.update([rad_ut], range_name=f"A{rad_nr}:{siste_bokstav}{rad_nr}")
     read_testkjop.clear()

@@ -18,10 +18,10 @@ import streamlit as st
 
 from components import kopier_knapp, topptekst, tom_tilstand, vis_feil
 from data import naa_norsk
-from jury import beregn_dager_til_refusjon, beregn_leveringsavvik, beregn_svartid, beregn_testkjop_status, read_jury
+from jury import beregn_dager_til_refusjon, beregn_leveringsavvik, beregn_svartid, beregn_testkjop_status, read_criteria, read_jury
 from pptx_eksport import bygg_testkjop_slide
 from sheets import (
-    read_stores, read_testkjop, read_testkjop_kundeservice, read_testkjop_tildeling, slett_testkjop_kundeservice_kanal,
+    TESTKJOP_KRITERIER, read_stores, read_testkjop, read_testkjop_kundeservice, read_testkjop_tildeling, slett_testkjop_kundeservice_kanal,
     write_testkjop_kundeservice_kanal, write_testkjop_steg,
 )
 
@@ -38,6 +38,7 @@ try:
     tildeling = read_testkjop_tildeling(sh)
     testkjop_data = read_testkjop(sh)
     kundeservice_data = read_testkjop_kundeservice(sh)
+    kriterier_info = {k["kriterium"]: k for k in read_criteria(sh)}
 except Exception as e:
     vis_feil("Kunne ikke lese testkjøp-data", e)
     st.stop()
@@ -129,7 +130,7 @@ if st.button("Lagre kommentar", icon=":material/save:", key=f"tk_{apnet_butikk}_
 
 st.divider()
 
-TIDSLINJE_STEG = ["Kjøp og levering", "Kommunikasjon", "Kundeservice", "Retur", "Pengene tilbake"]
+TIDSLINJE_STEG = ["Kjøp og levering", "Kommunikasjon", "Kundeservice", "Retur", "Pengene tilbake", "Samlet vurdering"]
 
 # ── Tidslinje: klikkbare steg, radvis (ny kolonnerad per 4 – holder rekkefølgen riktig når kolonnene stables på mobil) ──
 for rad_start in range(0, len(TIDSLINJE_STEG), 4):
@@ -154,6 +155,22 @@ SCORE_VALG = ["1", "2", "3", "4", "5", "Ikke aktuelt"]
 def _score_widget(key, eksisterende=""):
     idx = SCORE_VALG.index(eksisterende) if eksisterende in SCORE_VALG else 0
     return st.selectbox("Score", SCORE_VALG, index=idx, key=key)
+
+
+KRITERIE_VALG = ["", "1", "2", "3", "4", "5", "Ikke aktuelt"]
+
+
+def _kriterie_widget(kriterium, key_prefix, eksisterende):
+    idx = KRITERIE_VALG.index(eksisterende) if eksisterende in KRITERIE_VALG else 0
+    svar = st.selectbox(kriterium, KRITERIE_VALG, index=idx, key=f"{key_prefix}_{kriterium}".replace(" ", "_"), format_func=lambda v: v or "– Velg –")
+    if kriterier_info.get(kriterium, {}).get("kort"):
+        st.caption(kriterier_info[kriterium]["kort"])
+    return svar
+
+
+def _snitt_av_kriterier(svar):
+    tall = [int(v) for v in svar.values() if v.isdigit()]
+    return f"{sum(tall) / len(tall):.1f}".removesuffix(".0") if tall else ""
 
 
 def _tidspunkt_widgets(key_prefix, eksisterende="", label="Tidspunkt"):
@@ -257,12 +274,14 @@ def _render_generisk_steg(steg):
     # siden det lett forveksles med det separate «Tidspunkt for beskjeden»-
     # feltet lenger ned (de to måler ulike ting - se STEG_FELT_SPEC).
     TIDSPUNKT_LABEL = {"Retur": "Tidspunkt returen ble sendt (brukes til å beregne dager til refusjon)"}
-    viser_tidspunkt = steg not in ("Kommunikasjon", "Pengene tilbake")
+    viser_tidspunkt = steg not in ("Kommunikasjon", "Pengene tilbake", "Samlet vurdering")
     tidspunkt = (
         _tidspunkt_widgets(f"{key_prefix}_tidspunkt", eksisterende.get("Tidspunkt", ""), label=TIDSPUNKT_LABEL.get(steg, "Tidspunkt"))
         if viser_tidspunkt else ""
     )
-    score = _score_widget(f"{key_prefix}_score", eksisterende.get("Score", ""))
+    kriterier_i_steg = TESTKJOP_KRITERIER.get(steg, [])
+    kriterie_svar = {k: _kriterie_widget(k, key_prefix, eksisterende.get(k, "")) for k in kriterier_i_steg}
+    score = _snitt_av_kriterier(kriterie_svar) if kriterier_i_steg else _score_widget(f"{key_prefix}_score", eksisterende.get("Score", ""))
 
     felter = {}
     for feltnavn, typ, label in STEG_FELT_SPEC.get(steg, []):
@@ -276,6 +295,7 @@ def _render_generisk_steg(steg):
         if viser_tidspunkt:
             felter["Tidspunkt"] = tidspunkt
         felter["Score"] = score
+        felter.update(kriterie_svar)
         felter["Kommentar"] = kommentar
         try:
             write_testkjop_steg(sh, apnet_butikk, jurynavn, steg, felter)
