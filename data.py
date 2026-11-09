@@ -20,25 +20,27 @@ def naa_norsk() -> datetime:
 
 
 # ─────────────────────────────────────────────
-# Kriterier – IDENTISK ordlyd som i Fase 1-arket (5 kategorier, 16 kriterier)
+# Kriterier – Bringprisen Del 1 (3 hovedkriterier, 14 kriterier). Må ha samme
+# ordlyd som Kriterier-fanen: kommentarkolonnene bygges fra disse fagfeltene.
 # ─────────────────────────────────────────────
+_LEVERINGSVALG = "1. Leveringsvalg og relevans"
+_INTEGRASJON = "2. Integrasjon og checkout-opplevelse"
+_INFORMASJON = "3. Informasjon og forutsigbarhet før kjøp"
 KRITERIER = [
-    ("Førsteinntrykk", "Opplevelse: Bildebruk, beskrivelser o.l."),
-    ("Førsteinntrykk", "Navigasjon / UX"),
-    ("Førsteinntrykk", "Søk: auto-korrektur, synonymer, utlisting, forslag"),
-    ("Kundeservice & Tilgjengelighet", "Lett tilgjengelig info om levering, retur og kjøpsvilkår"),
-    ("Kundeservice & Tilgjengelighet", "Google/Trustpilot/andre åpne løsninger for kundetilfredshet"),
-    ("Kundeservice & Tilgjengelighet", "Tilgjengelighet, åpningstider, kanaler, responstid"),
-    ("Kundeservice & Tilgjengelighet", "Bærekraft"),
-    ("Kjøp/inspirasjon/personalisering", "Kassen: Levering, betaling"),
-    ("Kjøp/inspirasjon/personalisering", "Inspirasjon"),
-    ("Kjøp/inspirasjon/personalisering", "Mersalg/anbefalinger/personalisering"),
-    ("Markedsføring/kundedialog", "Bruk av SoMe"),
-    ("Markedsføring/kundedialog", "Betalt og organisk synlighet"),
-    ("Markedsføring/kundedialog", "E-post"),
-    ("Innovasjon", "Innovative løsninger"),
-    ("Innovasjon", "Adopsjon av nye teknologier for styrke konkurransekraft"),
-    ("Innovasjon", "Kommersielt håndverk"),
+    (_LEVERINGSVALG, "1.1 Riktige alternativ for produktet"),
+    (_LEVERINGSVALG, "1.2 Relevans for kundens behov"),
+    (_INTEGRASJON, "2.1 Integrert hentestedsvelger"),
+    (_INTEGRASJON, "2.2 Integrert ETA"),
+    (_INTEGRASJON, "2.3 Tydelige og forståelige tjenestenavn"),
+    (_INTEGRASJON, "2.4 Harmonisert pris"),
+    (_INTEGRASJON, "2.5 Pris innen betalingsvilje"),
+    (_INFORMASJON, "3.1 Levering/retur som salgsargument"),
+    (_INFORMASJON, "3.2 Utvidet info lett tilgjengelig"),
+    (_INFORMASJON, "3.3 Leveringsinfo"),
+    (_INFORMASJON, "3.4 Returinfo"),
+    (_INFORMASJON, "3.5 Sjekk leveringsalternativ"),
+    (_INFORMASJON, "3.6 Påminnelse om fri frakt"),
+    (_INFORMASJON, "3.7 Cut-off-tid og pakketid"),
 ]
 FAGFELT = list(dict.fromkeys(kat for kat, _ in KRITERIER))
 KRITERIER_PER_FAGFELT = {kat: [krit for k, krit in KRITERIER if k == kat] for kat in FAGFELT}

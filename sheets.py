@@ -668,7 +668,10 @@ def read_fase1_scores(_sh):
     """{butikknavn: {kriterium: score}} fra Fase 1-fanen, til bruk som
     referanse (f.eks. Fase1-snitt på Butikker-siden). Ytelse: se read_stores
     for hvorfor _rå_formatert hentes FØR _header_data."""
-    ws = _fane(_sh, FASE1_FANE)
+    try:
+        ws = _fane(_sh, FASE1_FANE)
+    except gspread.WorksheetNotFound:
+        return {}  # Bringprisen har ingen egen Fase 1-fane
     formatert = _rå_formatert(ws)
     grunn, krit, _ = _header_data(ws, _rader=formatert[:2])
     kol_butikk = grunn.get("Butikk")
@@ -920,14 +923,14 @@ def test_tilkobling(sh):
         return resultater
 
     try:
-        fase1 = sh.worksheet(FASE1_FANE)
-        fase1.update([["test"]], range_name="ZZ500")
-        fase1.update([[""]], range_name="ZZ500")
+        testfane = sh.worksheet(APPINNSTILLINGER_FANE)
+        testfane.update([["test"]], range_name="D200")
+        testfane.update([[""]], range_name="D200")
         resultater.append((True, "Appen har skrivetilgang."))
     except Exception as e:
         resultater.append((False, f"Mangler skrivetilgang: {e}. Del regnearket med tjenestekontoens e-post og gi Redigerer-tilgang (ikke bare Kan se)."))
 
-    for navn in [FASE1_FANE, FASE2_FANE, "Jury", "Kriterier"]:
+    for navn in [FASE2_FANE, "Jury", "Kriterier"]:
         try:
             ws = sh.worksheet(navn)
             if navn in (FASE1_FANE, FASE2_FANE, "Jury"):
