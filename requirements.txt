@@ -7,3 +7,4 @@ pandas>=2.0.0
 streamlit-aggrid>=1.0.5
 python-pptx>=1.0.2
 # Tving full redeploy nr. 9 (nr. 8 ble tilsynelatende ikke plukket opp av Streamlit Cloud)
+# Tving full redeploy nr. 10 (Testkjøp fikk ImportError fra gammel kjørende sheets-modul)
